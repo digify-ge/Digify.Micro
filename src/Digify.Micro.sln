@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digify.Micro", "Digify.Micro\Digify.Micro.csproj", "{9C788824-5E65-42B5-92A3-D5395F07FD4F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9C788824-5E65-42B5-92A3-D5395F07FD4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C788824-5E65-42B5-92A3-D5395F07FD4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C788824-5E65-42B5-92A3-D5395F07FD4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C788824-5E65-42B5-92A3-D5395F07FD4F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AEB2A8CF-57C8-4C3D-8E35-FC4B7B7F5FA6}
+	EndGlobalSection
+EndGlobal
