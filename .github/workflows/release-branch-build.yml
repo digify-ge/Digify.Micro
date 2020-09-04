@@ -1,0 +1,24 @@
+name: Release branch build
+
+on:
+  push:
+    branches:
+      - 'releases/**'  # Push events to branches matching refs/heads/releases/10
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Install dependencies
+      run: dotnet restore ./src/Digify.Micro.sln
+    - name: Build
+      run: dotnet build ./src/Digify.Micro.sln --configuration Release --no-restore
+    - name: Test
+      run: dotnet test ./src/Digify.Micro.sln --no-restore --verbosity normal

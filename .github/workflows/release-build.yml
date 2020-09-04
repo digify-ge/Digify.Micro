@@ -1,0 +1,43 @@
+name: Release build
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - *           # Push events to v1.0, v1.1, and v1.9 tags
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+        source-url: https://api.nuget.org/v3/index.json
+      env:
+          NUGET_AUTH_TOKEN: ${{secrets.NUGET_SECRET_DIGIFY}}
+    #Exporting version to env variable
+    - name: Set env
+      run: |
+        echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:10}
+        echo ::set-env name=NUGET_AUTH_TOKEN::${{secrets.NUGET_SECRET_DIGIFY}}
+    - name: Install dependencies
+      run: dotnet restore ./src/Digify.Micro.sln
+    - name: Build
+      run: dotnet build ./src/Digify.Micro.sln --configuration Release --no-restore
+    - name: Test
+      run: dotnet test ./src/Digify.Micro.sln --no-restore --verbosity normal
+    - name: Echo version
+      run: |
+          echo $RELEASE_VERSION
+          echo ${{ env.RELEASE_VERSION }}
+          
+    - name: Build solution and generate NuGet package
+      run: dotnet pack ./src/Digify.Micro.sln -c Release -p:PackageVersion=$RELEASE_VERSION -o ${GITHUB_WORKSPACE}/out  
+      
+    - name: Push Digify.Micro
+      run: dotnet nuget push ${GITHUB_WORKSPACE}/out/Digify.Micro.*.nupkg -k $NUGET_AUTH_TOKEN --skip-duplicate --no-symbols true
