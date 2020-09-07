@@ -6,8 +6,8 @@ namespace Digify.Micro.Commands
 {
     public interface ICommandBusAsync
     {
-        Task<TResult> ExecuteAsync<TCommand, TResult>(TCommand command) where TCommand : CommandWithResult<TResult>;
-        Task ExecuteAsync<TCommand>(TCommand command) where TCommand : Command;
+        Task<TResult> ExecuteAsync<TCommand, TResult>(TCommand command) where TCommand : ICommand;
+        Task ExecuteAsync<TCommand>(TCommand command) where TCommand : ICommand;
     }
 
     public class CommandBusAsync : ICommandBusAsync
@@ -15,7 +15,7 @@ namespace Digify.Micro.Commands
         private readonly ILifetimeScope context;
         public CommandBusAsync(ILifetimeScope context) => this.context = context ?? throw new ArgumentNullException(nameof(context));
 
-        public Task<TResult> ExecuteAsync<TCommand, TResult>(TCommand command) where TCommand : CommandWithResult<TResult>
+        public Task<TResult> ExecuteAsync<TCommand, TResult>(TCommand command) where TCommand : ICommand
         {
             if (command == null)
                 throw new ArgumentNullException($"Command shouldn't be null");
@@ -33,7 +33,7 @@ namespace Digify.Micro.Commands
             return result;
         }
 
-        public Task ExecuteAsync<TCommand>(TCommand command) where TCommand : Command
+        public Task ExecuteAsync<TCommand>(TCommand command) where TCommand : ICommand
         {
             if (command == null)
                 throw new ArgumentNullException($"Command shouldn't be null");
