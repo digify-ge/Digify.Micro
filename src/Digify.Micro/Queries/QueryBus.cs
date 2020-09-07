@@ -25,7 +25,7 @@ namespace Digify.Micro.Queries
         public QueryBusAsync(ILifetimeScope context) => this.context = context ?? throw new ArgumentNullException(nameof(context));
 
      
-        public Task<TResult> ExecuteAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery
+        public async Task<TResult> ExecuteAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery
         {
             if (query == null)
                 throw new ArgumentNullException($"Query shouldn't be null");
@@ -35,7 +35,7 @@ namespace Digify.Micro.Queries
                 var handler = scope.Resolve<IQueryHandlerAsync<TQuery, TResult>>()
                     ?? throw new InvalidOperationException($"Handler not found for specified query");
 
-                return handler.HandleAsync(query);
+                return await handler.HandleAsync(query);
             }
         }
     }
