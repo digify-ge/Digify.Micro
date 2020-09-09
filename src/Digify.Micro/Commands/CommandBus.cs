@@ -12,8 +12,13 @@ namespace Digify.Micro.Commands
 
     public class CommandBusAsync : ICommandBusAsync
     {
+        private readonly IPipelineBehavior pipeline;
         private readonly ILifetimeScope context;
-        public CommandBusAsync(ILifetimeScope context) => this.context = context ?? throw new ArgumentNullException(nameof(context));
+        public CommandBusAsync(ILifetimeScope context, IPipelineBehavior pipeline)
+        {
+            this.pipeline = pipeline;
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
+        }
 
         public async Task<TResult> ExecuteAsync<TCommand, TResult>(TCommand command) where TCommand : ICommand
         {
@@ -21,7 +26,7 @@ namespace Digify.Micro.Commands
                 throw new ArgumentNullException($"Command shouldn't be null");
 
             TResult result;
-
+            await pipeline.Handle<TCommand, TResult>(command);
             using (var scope = context.BeginLifetimeScope())
             {
                 var handler = scope.Resolve<ICommandHandlerAsync<TCommand, TResult>>()
