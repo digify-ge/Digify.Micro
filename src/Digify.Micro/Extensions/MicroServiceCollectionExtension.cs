@@ -15,12 +15,30 @@ namespace Digify.Micro.Extensions
 {
     public static class MicroServiceCollectionExtension
     {
-        public static IServiceCollection AddMicro(this IServiceCollection services, ContainerBuilder builder)
+        /// <summary>
+        /// Adding only Commands, Queries, Domains 
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static ContainerBuilder AddMicroCore(this IServiceCollection services)
+        {
+            var builder = new ContainerBuilder();
+            builder.AddCommands(services).AddQueries(services).AddDomains(services);
+            return builder;
+        }
+        /// <summary>
+        /// Adding Commands, Queries, Domains and Fluent Validation for CQRS.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static ContainerBuilder AddMicro(this IServiceCollection services)
         {
             services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+
+            var builder = new ContainerBuilder();
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             builder.RegisterGeneric(typeof(CommandValidator<>));
-            return services;
+            return builder;
         }
         private static ContainerBuilder AddCommands(this ContainerBuilder container, IServiceCollection services)
         {
