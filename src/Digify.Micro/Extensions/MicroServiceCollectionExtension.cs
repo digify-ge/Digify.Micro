@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Digify.Micro.Behaviors;
 using Digify.Micro.Commands;
+using Digify.Micro.Domain;
 using Digify.Micro.Queries;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,7 @@ namespace Digify.Micro.Extensions
         public static IServiceCollection AddMicro(this IServiceCollection services, ContainerBuilder builder)
         {
             services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
-
-            builder.AddCommands(services).AddQueries(services);
+            builder.AddCommands(services).AddQueries(services).AddDomains(services);
             builder.RegisterGeneric(typeof(CommandValidator<>));
             return services;
         }
@@ -27,7 +27,7 @@ namespace Digify.Micro.Extensions
             services.AddTransient<ICommandBusAsync, CommandBusAsync>();
             var exportedTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<,>)))
+            && (x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<>))))
             .ToList();
             foreach (var types in exportedTypes)
             {
@@ -46,6 +46,20 @@ namespace Digify.Micro.Extensions
             foreach (var types in exportedTypes)
             {
                 container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(Queries.IQueryHandlerAsync<,>));
+            }
+            return container;
+        }
+        private static ContainerBuilder AddDomains(this ContainerBuilder container, IServiceCollection services)
+        {
+            services.AddSingleton<IDomainEventBusBulkAsync, DomainEventBusBulkAsync>();
+
+            var exportedTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(e => e.ExportedTypes)
+            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x =>
+             x == typeof(Domain.IDomainEventHandlerAsync<>)))
+            .ToList();
+            foreach (var types in exportedTypes)
+            {
+                container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(Domain.IDomainEventHandlerAsync<>));
             }
             return container;
         }
