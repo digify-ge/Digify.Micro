@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace Digify.Micro
 {
-    public interface ICommandValidationBehaviour<TCommand> where TCommand : ICommand
+    public interface ICommandValidationBehaviour<TRequest>
     {
-        Task Handle(TCommand command);
+        Task Handle(TRequest command);
     }
 }
