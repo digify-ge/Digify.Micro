@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Digify.Micro.Behaviors;
 using System;
 using System.Threading.Tasks;
 
@@ -32,6 +33,9 @@ namespace Digify.Micro.Queries
 
             using (var scope = context.BeginLifetimeScope())
             {
+                var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TQuery>>();
+                if (validationHandler != null) await validationHandler.Handle(query);
+
                 var handler = scope.Resolve<IQueryHandlerAsync<TQuery, TResult>>()
                     ?? throw new InvalidOperationException($"Handler not found for specified query");
 

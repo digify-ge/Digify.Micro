@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Digify.Micro.Behaviors
 {
-    public class CommandValidator<TRequest>
+    public class MicroHandlerValidator<TRequest>
     {
         private IEnumerable<IValidator<TRequest>> _validators;
-        public CommandValidator(IEnumerable<IValidator<TRequest>> validators)
+        public MicroHandlerValidator(IEnumerable<IValidator<TRequest>> validators)
         {
             _validators = validators;
         }

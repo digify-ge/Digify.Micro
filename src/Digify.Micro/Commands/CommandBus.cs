@@ -28,7 +28,7 @@ namespace Digify.Micro.Commands
 
             using (var scope = context.BeginLifetimeScope())
             {
-                var validationHandler = scope.ResolveOptional<CommandValidator<TCommand>>();
+                var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TCommand>>();
                 if (validationHandler != null) await validationHandler.Handle(command);
 
                 var handler = scope.Resolve<ICommandHandlerAsync<TCommand, TResult>>()
@@ -47,7 +47,7 @@ namespace Digify.Micro.Commands
 
             using (var scope = context.BeginLifetimeScope())
             {
-                var validationHandler = scope.ResolveOptional<ICommandValidationBehaviour<TCommand>>();
+                var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TCommand>>();
                 if (validationHandler != null) await validationHandler.Handle(command);
 
                 var handler = scope.Resolve<ICommandHandlerAsync<TCommand>>()

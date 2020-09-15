@@ -38,7 +38,7 @@ namespace Digify.Micro.Extensions
 
             var builder = new ContainerBuilder();
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
-            builder.RegisterGeneric(typeof(CommandValidator<>));
+            builder.RegisterGeneric(typeof(MicroHandlerValidator<>));
             return builder;
         }
         private static ContainerBuilder AddCommands(this ContainerBuilder container, IServiceCollection services)
