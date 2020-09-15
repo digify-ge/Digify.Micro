@@ -15,6 +15,7 @@ namespace Digify.Micro.Extensions
 {
     public static class MicroServiceCollectionExtension
     {
+        private static IEnumerable<Assembly> _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(e => !e.IsDynamic);
         /// <summary>
         /// Adding only Commands, Queries, Domains 
         /// </summary>
@@ -33,7 +34,7 @@ namespace Digify.Micro.Extensions
         /// <returns></returns>
         public static ContainerBuilder AddMicro(this IServiceCollection services)
         {
-            services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddValidatorsFromAssemblies(_assemblies);
 
             var builder = new ContainerBuilder();
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
@@ -43,7 +44,7 @@ namespace Digify.Micro.Extensions
         private static ContainerBuilder AddCommands(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddTransient<ICommandBusAsync, CommandBusAsync>();
-            var exportedTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(e => e.ExportedTypes)
+            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
             && (x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<>))))
             .ToList();
@@ -57,7 +58,7 @@ namespace Digify.Micro.Extensions
         private static ContainerBuilder AddQueries(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddTransient<IQueryBusAsync, QueryBusAsync>();
-            var exportedTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(e => e.ExportedTypes)
+            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
             && x.GetGenericTypeDefinition() == typeof(Queries.IQueryHandlerAsync<,>)))
             .ToList();
@@ -71,7 +72,7 @@ namespace Digify.Micro.Extensions
         {
             services.AddSingleton<IDomainEventBusBulkAsync, DomainEventBusBulkAsync>();
 
-            var exportedTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(e => e.ExportedTypes)
+            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x =>
              x == typeof(Domain.IDomainEventHandlerAsync<>)))
             .ToList();
