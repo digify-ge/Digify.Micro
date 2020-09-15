@@ -21,9 +21,10 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicroCore(this IServiceCollection services)
+        public static ContainerBuilder AddMicroCore(this IServiceCollection services, MicroSettings settings = default)
         {
             var builder = new ContainerBuilder();
+            services.AddSingleton(settings);
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             return builder;
         }
@@ -32,9 +33,10 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicro(this IServiceCollection services)
+        public static ContainerBuilder AddMicro(this IServiceCollection services, MicroSettings settings = default)
         {
             services.AddValidatorsFromAssemblies(_assemblies);
+            services.AddSingleton(settings);
 
             var builder = new ContainerBuilder();
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
