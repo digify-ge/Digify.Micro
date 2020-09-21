@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Digify.Micro", "Digify.Micro\Digify.Micro.csproj", "{9C788824-5E65-42B5-92A3-D5395F07FD4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digify.Micro.Tests", "Digify.Micro.Tests\Digify.Micro.Tests.csproj", "{AF888A88-3125-4060-976A-55AAD748028F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Digify.Micro.Tests", "Digify.Micro.Tests\Digify.Micro.Tests.csproj", "{AF888A88-3125-4060-976A-55AAD748028F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

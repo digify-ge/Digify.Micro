@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Digify.Micro.Behaviors;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,11 +36,14 @@ namespace Digify.Micro.Domain
                     var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TDomainEvent>>();
                     if (validationHandler != null) await validationHandler.Handle(domainEvent);
                     var eventHandlerType = typeof(IDomainEventHandlerAsync<>).MakeGenericType(domainEvent.GetType());
-                    var handler = scope.Resolve(eventHandlerType);
+                    Type listOfeventhandlerTypes = typeof(IEnumerable<>).MakeGenericType(eventHandlerType);
+                    var rs = (IEnumerable)scope.Resolve<IComponentContext>().Resolve(listOfeventhandlerTypes);
+                    var handler = (IEnumerable)scope.Resolve(listOfeventhandlerTypes);
+                    var rss3 = scope.Resolve(eventHandlerType);
                     await (Task)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { domainEvent });
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 throw;
             }
