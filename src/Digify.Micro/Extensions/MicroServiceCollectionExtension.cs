@@ -16,6 +16,7 @@ namespace Digify.Micro.Extensions
     public static class MicroServiceCollectionExtension
     {
         private static IEnumerable<Assembly> _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(e => !e.IsDynamic);
+
         /// <summary>
         /// Adding only Commands, Queries, Domains 
         /// </summary>
@@ -56,10 +57,11 @@ namespace Digify.Micro.Extensions
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
             && (x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<>))))
             .ToList();
-            foreach (var types in exportedTypes)
+
+            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
             {
-                container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(ICommandHandlerAsync<>));
-                container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(ICommandHandlerAsync<,>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(ICommandHandlerAsync<>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(ICommandHandlerAsync<,>));
             }
             return container;
         }
@@ -68,11 +70,12 @@ namespace Digify.Micro.Extensions
             services.AddTransient<IQueryBusAsync, QueryBusAsync>();
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && x.GetGenericTypeDefinition() == typeof(Queries.IQueryHandlerAsync<,>)))
+            && x.GetGenericTypeDefinition() == typeof(IQueryHandlerAsync<,>)))
             .ToList();
-            foreach (var types in exportedTypes)
+
+            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
             {
-                container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(Queries.IQueryHandlerAsync<,>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(IQueryHandlerAsync<,>));
             }
             return container;
         }
@@ -83,12 +86,12 @@ namespace Digify.Micro.Extensions
 
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && x.GetGenericTypeDefinition() == typeof(Domain.IDomainEventHandlerAsync<>)))
+            && x.GetGenericTypeDefinition() == typeof(IDomainEventHandlerAsync<>)))
             .ToList();
 
             foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
             {
-                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(Domain.IDomainEventHandlerAsync<>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(IDomainEventHandlerAsync<>));
             }
             return container;
         }
