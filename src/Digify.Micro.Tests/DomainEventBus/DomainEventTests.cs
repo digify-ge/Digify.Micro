@@ -1,8 +1,11 @@
 ﻿using Autofac;
 using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
+using Digify.Micro.Commands;
 using Digify.Micro.Domain;
 using Digify.Micro.Extensions;
+using Digify.Micro.Tests.DomainEventBus.Handlers;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -12,14 +15,19 @@ using Xunit;
 
 namespace Digify.Micro.Tests.DomainEventBus
 {
-    public class DebTest
+    public class DomainEventTests
     {
+
+        public static bool HandlerOnePassed = false;
+        public static bool HandlerTwoPassed = false;
+
+
         [Fact]
-        public async Task Test()
+        public async Task Executing_domain_event_which_has_multiple_implementations_should_work()
         {
             var service = new ServiceCollection();
-            service.AddMicroCore();
             var ctr = new ContainerBuilder();
+            service.AddMicroCore(ctr);
             ctr.Populate(service);
             IServiceProvider r = new AutofacServiceProvider(ctr.Build());
             var ltscope = r.GetService<ILifetimeScope>();
@@ -27,6 +35,8 @@ namespace Digify.Micro.Tests.DomainEventBus
             {
                 var domainEventBus = scope.Resolve<IDomainEventBusAsync>();
                 await domainEventBus.ExecuteAsync(new TestDomainEvent("Givi"));
+                HandlerOnePassed.Should().BeTrue();
+                HandlerTwoPassed.Should().BeTrue();
             }
         }
     }

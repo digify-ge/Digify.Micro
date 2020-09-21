@@ -1,9 +1,10 @@
-﻿using Digify.Micro.Domain;
+﻿using Digify.Micro.Commands;
+using Digify.Micro.Domain;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Digify.Micro.Tests.DomainEventBus
+namespace Digify.Micro.Tests.DomainEventBus.Handlers
 {
     public class TestDomainEvent : IDomainEvent
     {

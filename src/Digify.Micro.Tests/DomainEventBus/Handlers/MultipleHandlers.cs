@@ -1,6 +1,8 @@
-﻿using Digify.Micro.Domain;
+﻿using Digify.Micro.Commands;
+using Digify.Micro.Domain;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,15 +12,19 @@ namespace Digify.Micro.Tests.DomainEventBus.Handlers
     {
         public Task HandleAsync(TestDomainEvent domainEvent)
         {
-            Console.WriteLine(nameof(TestOneHandler));
+            Debug.WriteLine(nameof(TestOneHandler));
+            //Task.Delay(4000);
+            DomainEventTests.HandlerOnePassed = true;
             return Task.CompletedTask;
         }
     }
+
     public class TestTwoHandler : IDomainEventHandlerAsync<TestDomainEvent>
     {
         public Task HandleAsync(TestDomainEvent domainEvent)
         {
-            Console.WriteLine(nameof(TestTwoHandler));
+            Debug.WriteLine(nameof(TestTwoHandler));
+            DomainEventTests.HandlerTwoPassed = true;
             return Task.CompletedTask;
         }
     }

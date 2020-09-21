@@ -21,10 +21,8 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicroCore(this IServiceCollection services, MicroSettings settings = default)
+        public static ContainerBuilder AddMicroCore(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
         {
-            var builder = new ContainerBuilder();
-
             if (settings != null)
             {
                 services.AddSingleton(settings);
@@ -38,16 +36,15 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicro(this IServiceCollection services, MicroSettings settings = default)
+        public static ContainerBuilder AddMicro(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
         {
             services.AddValidatorsFromAssemblies(_assemblies);
 
-            if(settings != null)
+            if (settings != null)
             {
                 services.AddSingleton(settings);
             }
 
-            var builder = new ContainerBuilder();
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             builder.RegisterGeneric(typeof(MicroHandlerValidator<>));
             return builder;
@@ -88,9 +85,10 @@ namespace Digify.Micro.Extensions
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
             && x.GetGenericTypeDefinition() == typeof(Domain.IDomainEventHandlerAsync<>)))
             .ToList();
-            foreach (var types in exportedTypes)
+
+            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
             {
-                container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(Domain.IDomainEventHandlerAsync<>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(Domain.IDomainEventHandlerAsync<>));
             }
             return container;
         }
