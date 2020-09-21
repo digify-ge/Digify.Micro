@@ -21,10 +21,13 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicroCore(this IServiceCollection services, MicroSettings settings = default)
+        public static ContainerBuilder AddMicroCore(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
         {
-            var builder = new ContainerBuilder();
-            services.AddSingleton(settings);
+            if (settings != null)
+            {
+                services.AddSingleton(settings);
+            }
+
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             return builder;
         }
@@ -33,12 +36,15 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicro(this IServiceCollection services, MicroSettings settings = default)
+        public static ContainerBuilder AddMicro(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
         {
             services.AddValidatorsFromAssemblies(_assemblies);
-            services.AddSingleton(settings);
 
-            var builder = new ContainerBuilder();
+            if (settings != null)
+            {
+                services.AddSingleton(settings);
+            }
+
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             builder.RegisterGeneric(typeof(MicroHandlerValidator<>));
             return builder;
@@ -72,15 +78,17 @@ namespace Digify.Micro.Extensions
         }
         private static ContainerBuilder AddDomains(this ContainerBuilder container, IServiceCollection services)
         {
+            services.AddSingleton<IDomainEventBusAsync, DomainEventBusAsync>();
             services.AddSingleton<IDomainEventBusBulkAsync, DomainEventBusBulkAsync>();
 
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
-            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x =>
-             x == typeof(Domain.IDomainEventHandlerAsync<>)))
+            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
+            && x.GetGenericTypeDefinition() == typeof(Domain.IDomainEventHandlerAsync<>)))
             .ToList();
-            foreach (var types in exportedTypes)
+
+            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
             {
-                container.RegisterAssemblyTypes(types.Assembly).AsClosedTypesOf(typeof(Domain.IDomainEventHandlerAsync<>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(Domain.IDomainEventHandlerAsync<>));
             }
             return container;
         }

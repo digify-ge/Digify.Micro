@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Digify.Micro.Behaviors;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace Digify.Micro.Domain
 
     public interface IDomainEventBusBulkAsync
     {
-        Task ExecuteBulkAsync(IEnumerable<IDomainEvent> domainEvents);
+        Task ExecuteBulkAsync<TDomainEvent>(IEnumerable<TDomainEvent> domainEvents) where TDomainEvent : IDomainEvent;
     }
 
     public class DomainEventBusAsync : IDomainEventBusAsync
@@ -34,12 +35,14 @@ namespace Digify.Micro.Domain
                 {
                     var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TDomainEvent>>();
                     if (validationHandler != null) await validationHandler.Handle(domainEvent);
-                    var eventHandlerType = typeof(IDomainEventHandlerAsync<>).MakeGenericType(domainEvent.GetType());
-                    var handler = scope.Resolve(eventHandlerType);
-                    await (Task)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { domainEvent });
+
+                    var handlers = scope.Resolve<IEnumerable<IDomainEventHandlerAsync<TDomainEvent>>>()
+                        ?? throw new InvalidOperationException($"Handler not found for specified Domain event");
+
+                    Parallel.ForEach(handlers, async (handler) => await handler.HandleAsync(domainEvent));
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 throw;
             }
@@ -53,7 +56,7 @@ namespace Digify.Micro.Domain
 
         public DomainEventBusBulkAsync(ILifetimeScope context) => this.context = context ?? throw new ArgumentNullException(nameof(context));
 
-        public async Task ExecuteBulkAsync(IEnumerable<IDomainEvent> domainEvents)
+        public async Task ExecuteBulkAsync<TDomainEvent>(IEnumerable<TDomainEvent> domainEvents) where TDomainEvent : IDomainEvent
         {
             if (domainEvents == null || !domainEvents.Any())
                 throw new ArgumentNullException($"Domain events shouldn't be empty");
@@ -67,9 +70,13 @@ namespace Digify.Micro.Domain
                         if (domainEvent == null)
                             throw new ArgumentNullException($"Domain event shouldn't be null");
 
-                        var eventHandlerType = typeof(IDomainEventHandlerAsync<>).MakeGenericType(domainEvent.GetType());
-                        var handler = scope.Resolve(eventHandlerType);
-                        await (Task)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { domainEvent });
+                        var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TDomainEvent>>();
+                        if (validationHandler != null) await validationHandler.Handle(domainEvent);
+
+                        var handlers = scope.Resolve<IEnumerable<IDomainEventHandlerAsync<TDomainEvent>>>()
+                            ?? throw new InvalidOperationException($"Handler not found for specified Domain event");
+
+                        Parallel.ForEach(handlers, async (handler) => await handler.HandleAsync(domainEvent));
                     }
                 }
             }
