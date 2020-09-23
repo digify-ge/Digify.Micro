@@ -25,14 +25,14 @@ namespace Digify.Micro
         /// This will default to <see cref="DateTimeOffset.UtcNow"/> if no value has been provided in constructor.
         /// </summary>
         [JsonProperty]
-        public DateTimeOffset Created { get; protected set; }
+        public DateTime Created { get; protected set; }
 
         /// <summary>
         /// Date when entity was last updated. 
         /// This will default to <see cref="DateTimeOffset.UtcNow"/> if no value has been provided in constructor.
         /// </summary>
         [JsonProperty]
-        public DateTimeOffset Updated { get; protected set; }
+        public DateTime Updated { get; protected set; }
 
         #endregion Properties
 
@@ -43,22 +43,22 @@ namespace Digify.Micro
         /// </summary>
         public Entity()
         {
-            Created = DateTimeOffset.UtcNow;
-            Updated = DateTimeOffset.UtcNow;
+            Created = DateTime.Now;
+            Updated = DateTime.Now;
         }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <remarks>
-        /// This will set <see cref="Created"/> and <see cref="Updated"/> properties to <see cref="DateTimeOffset.UtcNow"/>.
+        /// This will set <see cref="Created"/> and <see cref="Updated"/> properties to <see cref="DateTime.Now"/>.
         /// </remarks>
         /// <param name="entityId">ID of entity.</param>
         public Entity(TEntityId entityId)
         {
             Id = entityId;
-            Created = DateTimeOffset.UtcNow;
-            Updated = DateTimeOffset.UtcNow;
+            Created = DateTime.Now;
+            Updated = DateTime.Now;
         }
 
         #endregion Constructors
@@ -126,11 +126,11 @@ namespace Digify.Micro
         /// <summary>
         /// Date when entity was created.
         /// </summary>
-        DateTimeOffset Created { get; }
+        DateTime Created { get; }
 
         /// <summary>
         /// Date when entity was last updated.
         /// </summary>
-        DateTimeOffset Updated { get; }
+        DateTime Updated { get; }
     }
 }
