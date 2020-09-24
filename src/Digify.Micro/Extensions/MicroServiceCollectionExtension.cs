@@ -82,7 +82,6 @@ namespace Digify.Micro.Extensions
         private static ContainerBuilder AddDomains(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddSingleton<IDomainEventBusAsync, DomainEventBusAsync>();
-            services.AddSingleton<IDomainEventBusBulkAsync, DomainEventBusBulkAsync>();
 
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
