@@ -24,14 +24,16 @@ namespace Digify.Micro.Extensions
         /// <returns></returns>
         public static ContainerBuilder AddMicroCore(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
         {
-            if (settings != null)
-            {
-                services.AddSingleton(settings);
-            }
+            MicroSettings microSettings = settings;
+            if (settings == null)
+                microSettings = new MicroSettings();
+
+            services.AddSingleton(microSettings);
 
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             return builder;
         }
+
         /// <summary>
         /// Adding Commands, Queries, Domains and Fluent Validation for CQRS.
         /// </summary>
@@ -41,15 +43,17 @@ namespace Digify.Micro.Extensions
         {
             services.AddValidatorsFromAssemblies(_assemblies);
 
-            if (settings != null)
-            {
-                services.AddSingleton(settings);
-            }
+            MicroSettings microSettings = settings;
+            if (settings == null)
+                microSettings = new MicroSettings();
+
+            services.AddSingleton(microSettings);
 
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             builder.RegisterGeneric(typeof(MicroHandlerValidator<>));
             return builder;
         }
+
         private static ContainerBuilder AddCommands(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddTransient<ICommandBusAsync, CommandBusAsync>();
@@ -65,6 +69,7 @@ namespace Digify.Micro.Extensions
             }
             return container;
         }
+
         private static ContainerBuilder AddQueries(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddTransient<IQueryBusAsync, QueryBusAsync>();
@@ -79,6 +84,7 @@ namespace Digify.Micro.Extensions
             }
             return container;
         }
+
         private static ContainerBuilder AddDomains(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddSingleton<IDomainEventBusAsync, DomainEventBusAsync>();

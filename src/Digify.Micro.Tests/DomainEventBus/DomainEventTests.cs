@@ -27,7 +27,7 @@ namespace Digify.Micro.Tests.DomainEventBus
         {
             var service = new ServiceCollection();
             var ctr = new ContainerBuilder();
-            service.AddMicroCore(ctr);
+            service.AddMicro(ctr);
             ctr.Populate(service);
             IServiceProvider r = new AutofacServiceProvider(ctr.Build());
             var ltscope = r.GetService<ILifetimeScope>();
