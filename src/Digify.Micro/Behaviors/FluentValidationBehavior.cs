@@ -30,7 +30,7 @@ namespace Digify.Micro.Behaviors
                 var failures = validationResult.SelectMany(x => x.Errors).Where(f => f != null).ToList();
                 if (failures.Any())
                 {
-                    throw new MicroValidationException(failures, _microSettings.ValidationErrorMessage);
+                    throw new MicroValidationException(failures, _microSettings?.ValidationErrorMessage ?? "ValidationErrors");
                 }
             }
 
