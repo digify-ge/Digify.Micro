@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Digify.Micro.Tests.Application\Digify.Micro.Tests.Application.csproj" />
     <ProjectReference Include="..\Digify.Micro\Digify.Micro.csproj" />
   </ItemGroup>
 

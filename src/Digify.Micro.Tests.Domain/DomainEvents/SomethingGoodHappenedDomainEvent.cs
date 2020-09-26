@@ -1,12 +1,11 @@
-﻿using Digify.Micro.Commands;
-using Digify.Micro.Domain;
+﻿using Digify.Micro.Domain;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Digify.Micro.Tests.DomainEventBus.Handlers
+namespace Digify.Micro.Tests.Domain.DomainEvents
 {
-    public class TestDomainEvent : IDomainEvent
+    public class SomethingGoodHappenedDomainEvent : IDomainEvent
     {
         public Guid AggregateRootId => new Guid();
 
@@ -14,7 +13,7 @@ namespace Digify.Micro.Tests.DomainEventBus.Handlers
 
         public string FirstName { get; set; }
 
-        public TestDomainEvent(string firstName)
+        public SomethingGoodHappenedDomainEvent(string firstName)
         {
             FirstName = firstName;
         }

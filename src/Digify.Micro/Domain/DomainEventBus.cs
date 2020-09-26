@@ -32,10 +32,14 @@ namespace Digify.Micro.Domain
                     var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TDomainEvent>>();
                     if (validationHandler != null) await validationHandler.Handle(domainEvent);
 
-                    var handlers = scope.Resolve<IEnumerable<IDomainEventHandlerAsync<TDomainEvent>>>()
-                        ?? throw new InvalidOperationException($"Handler not found for specified Domain event");
+                    var eventHandlerType = typeof(IDomainEventHandlerAsync<>).MakeGenericType(domainEvent.GetType());
+                    var listOfType = typeof(IEnumerable<>).MakeGenericType(eventHandlerType);
+                    var handlers = (IEnumerable<object>)scope.ResolveOptional(listOfType);
 
-                    Parallel.ForEach(handlers, async (handler) => await handler.HandleAsync(domainEvent));
+                    if (handlers != null && handlers.Any())
+                        Parallel.ForEach(handlers,
+                        async (handler) => await (Task)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { domainEvent })
+                        );
                 }
             }
             catch (Exception)
@@ -61,10 +65,14 @@ namespace Digify.Micro.Domain
                         var validationHandler = scope.ResolveOptional<MicroHandlerValidator<TDomainEvent>>();
                         if (validationHandler != null) await validationHandler.Handle(domainEvent);
 
-                        var handlers = scope.Resolve<IEnumerable<IDomainEventHandlerAsync<TDomainEvent>>>()
-                            ?? throw new InvalidOperationException($"Handler not found for specified Domain event");
+                        var eventHandlerType = typeof(IDomainEventHandlerAsync<>).MakeGenericType(domainEvent.GetType());
+                        var listOfType = typeof(IEnumerable<>).MakeGenericType(eventHandlerType);
+                        var handlers = (IEnumerable<object>)scope.ResolveOptional(listOfType);
 
-                        Parallel.ForEach(handlers, async (handler) => await handler.HandleAsync(domainEvent));
+                        if (handlers != null && handlers.Any())
+                            Parallel.ForEach(handlers,
+                            async (handler) => await (Task)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { domainEvent })
+                            );
                     }
                 }
             }

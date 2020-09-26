@@ -4,7 +4,8 @@ using Autofac.Extensions.DependencyInjection;
 using Digify.Micro.Commands;
 using Digify.Micro.Domain;
 using Digify.Micro.Extensions;
-using Digify.Micro.Tests.DomainEventBus.Handlers;
+using Digify.Micro.Tests.Application.CommandHandlers;
+using Digify.Micro.Tests.Domain.DomainEvents;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -18,10 +19,6 @@ namespace Digify.Micro.Tests.DomainEventBus
     public class DomainEventTests
     {
 
-        public static bool HandlerOnePassed = false;
-        public static bool HandlerTwoPassed = false;
-
-
         [Fact]
         public async Task Executing_domain_event_which_has_multiple_implementations_should_work()
         {
@@ -33,10 +30,12 @@ namespace Digify.Micro.Tests.DomainEventBus
             var ltscope = r.GetService<ILifetimeScope>();
             using (var scope = ltscope.BeginLifetimeScope())
             {
-                var domainEventBus = scope.Resolve<IDomainEventBusAsync>();
-                await domainEventBus.ExecuteAsync(new TestDomainEvent("Givi"));
-                HandlerOnePassed.Should().BeTrue();
-                HandlerTwoPassed.Should().BeTrue();
+                var commandBus = scope.Resolve<ICommandBusAsync>();
+                await commandBus.ExecuteAsync(new TestCommand());
+
+
+                Application.DomainEventHandlers.TestOneHandler.HandlerOnePassed.Should().BeTrue();
+                Application.DomainEventHandlers.TestTwoHandler.HandlerTwoPassed.Should().BeTrue();
             }
         }
     }

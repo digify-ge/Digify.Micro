@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Digify.Micro.Tests.Domain\Digify.Micro.Tests.Domain.csproj" />
+    <ProjectReference Include="..\Digify.Micro\Digify.Micro.csproj" />
+  </ItemGroup>
+
+</Project>
