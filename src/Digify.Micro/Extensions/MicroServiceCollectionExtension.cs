@@ -49,11 +49,25 @@ namespace Digify.Micro.Extensions
 
             services.AddSingleton(microSettings);
 
-            builder.AddCommands(services).AddQueries(services).AddDomains(services);
+            builder.AddCommands(services).AddQueries(services).AddDomains(services).AddRequestHandlers(services);
             builder.RegisterGeneric(typeof(MicroHandlerValidator<>));
             return builder;
         }
+        private static ContainerBuilder AddRequestHandlers(this ContainerBuilder container, IServiceCollection services)
+        {
+            services.AddTransient<IEventBusAsync, EventBus>();
+            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
+            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
+            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<>))))
+            .ToList();
 
+            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
+            {
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(IRequestHandlerAsync<>));
+                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(IRequestHandlerAsync<,>));
+            }
+            return container;
+        }
         private static ContainerBuilder AddCommands(this ContainerBuilder container, IServiceCollection services)
         {
             services.AddTransient<ICommandBusAsync, CommandBusAsync>();
