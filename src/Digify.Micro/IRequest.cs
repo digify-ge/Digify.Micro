@@ -2,6 +2,7 @@
 using Digify.Micro.Behaviors;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,9 +18,10 @@ namespace Digify.Micro
     {
         Task<TResult> ExecuteAsync<TResult>(IRequest<TResult> request);
         Task ExecuteAsync<TRequest>(TRequest request) where TRequest : IRequest;
+        Task Publish<TRequest>(TRequest request) where TRequest : IRequest;
     }
 
-    public interface IRequestHandlerAsync<TRequest, TResult> where TRequest : IRequest<TResult>
+    public interface IRequestHandlerAsync<in TRequest, TResult> where TRequest : IRequest<TResult>
     {
         Task<TResult> HandleAsync(TRequest command);
     }
@@ -47,7 +49,7 @@ namespace Digify.Micro
                 var validatorHandlerType = typeof(MicroHandlerValidator<>).MakeGenericType(request.GetType());
                 var validationHandler = scope.ResolveOptional(validatorHandlerType);
                 if (validationHandler != null)
-                    validatorHandlerType.GetMethod("Handle").Invoke(validationHandler, new object[] { request });
+                    await (Task)validatorHandlerType.GetMethod("Handle").Invoke(validationHandler, new object[] { request });
 
                 var eventHandlerType = typeof(IRequestHandlerAsync<,>).MakeGenericType(request.GetType(), typeof(TResult));
                 var handler = scope.ResolveOptional(eventHandlerType);
@@ -56,7 +58,28 @@ namespace Digify.Micro
 
             return result;
         }
+        public async Task Publish<TRequest>(TRequest request) where TRequest : IRequest
+        {
+            if (request == null)
+                throw new ArgumentNullException($"Command shouldn't be null");
 
+            using (var scope = context.BeginLifetimeScope())
+            {
+                var validatorHandlerType = typeof(MicroHandlerValidator<>).MakeGenericType(request.GetType());
+                var validationHandler = scope.ResolveOptional(validatorHandlerType);
+                if (validationHandler != null)
+                    await (Task)validatorHandlerType.GetMethod("Handle").Invoke(validationHandler, new object[] { request });
+
+                var eventHandlerType = typeof(IRequestHandlerAsync<>).MakeGenericType(request.GetType());
+                var listOfType = typeof(IEnumerable<>).MakeGenericType(eventHandlerType);
+                var handlers = (IEnumerable<object>)scope.ResolveOptional(listOfType);
+
+                if (handlers != null && handlers.Any())
+                    Parallel.ForEach(handlers,
+                        async (handler) => await (Task)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { request })
+                    );
+            }
+        }
         public async Task ExecuteAsync<TRequest>(TRequest request) where TRequest : IRequest
         {
             if (request == null)
@@ -73,5 +96,7 @@ namespace Digify.Micro
                 await handler.HandleAsync(request);
             }
         }
+
+
     }
 }
