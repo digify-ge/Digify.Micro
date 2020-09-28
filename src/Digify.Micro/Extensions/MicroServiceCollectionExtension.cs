@@ -4,6 +4,7 @@ using Digify.Micro.Commands;
 using Digify.Micro.Domain;
 using Digify.Micro.Queries;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace Digify.Micro.Extensions
                 microSettings = new MicroSettings();
 
             services.AddSingleton(microSettings);
+            services.AddTransient<IBusActionFilter, BaseBusActionFilter>();
 
             builder.AddCommands(services).AddQueries(services).AddDomains(services);
             return builder;
@@ -48,6 +50,7 @@ namespace Digify.Micro.Extensions
                 microSettings = new MicroSettings();
 
             services.AddSingleton(microSettings);
+            services.AddTransient<IBusActionFilter, BaseBusActionFilter>();
 
             builder.AddCommands(services).AddQueries(services).AddDomains(services).AddRequestHandlers(services);
             builder.RegisterGeneric(typeof(MicroHandlerValidator<>));

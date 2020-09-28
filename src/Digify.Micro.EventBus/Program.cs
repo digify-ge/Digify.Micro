@@ -17,12 +17,12 @@ namespace Digify.Micro
             IServiceCollection svc = new ServiceCollection();
             var container = new ContainerBuilder();
             svc.AddMicro(container);
+            svc.AddTransient<IBusActionFilter, BusActionFilter>();
             container.Populate(svc);
             var newSvc = new AutofacServiceProvider(container.Build());
             var rs = newSvc.GetService<IEventBusAsync>();
             //Sendd Command with result
             var result = await rs.ExecuteAsync(new UserCommand());
-
             //Send Command without result
             await rs.ExecuteAsync(new UserRegisterCommand());
 
@@ -32,11 +32,23 @@ namespace Digify.Micro
             Console.WriteLine("Hello World!");
         }
     }
-    public class UserCommand : IRequest<int>
+    public class BusActionFilter : IBusActionFilter
+    {
+        public Task OnExecuted<TResponse>(TResponse result)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task OnExecuting()
+        {
+            return Task.CompletedTask;
+        }
+    }
+    public class UserCommand : QueryRequest<int>
     {
 
     }
-    public class UserRegisterCommand : IRequest
+    public class UserRegisterCommand : IRequest, ICommand
     {
 
     }

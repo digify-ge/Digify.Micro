@@ -1,5 +1,8 @@
 ﻿using Autofac;
 using Digify.Micro.Behaviors;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +16,10 @@ namespace Digify.Micro
     }
     public interface IRequest<TResponse>
     {
+    }
+    public interface QueryRequest<TResponse> : IRequest<TResponse>
+    {
+
     }
     public interface IEventBusAsync
     {
@@ -29,31 +36,103 @@ namespace Digify.Micro
     {
         Task HandleAsync(TRequest command);
     }
-
-    public class EventBus : IEventBusAsync
+    public class BaseBusActionFilter : IBusActionFilter
     {
-        private readonly ILifetimeScope context;
-        public EventBus(ILifetimeScope context)
+        public Task OnExecuted<TResponse>(TResponse result)
         {
-            this.context = context ?? throw new ArgumentNullException(nameof(context));
+            return Task.CompletedTask;
         }
-        public async Task<TResult> ExecuteAsync<TResult>(IRequest<TResult> request)
+
+        public Task OnExecuting()
+        {
+            return Task.CompletedTask;
+        }
+    }
+    public interface IBusActionFilter
+    {
+        Task OnExecuting();
+        Task OnExecuted<TResponse>(TResponse result);
+    }
+    public interface IPreProcess
+    {
+        Task ProcessAsync<TRequest>(TRequest request);
+    }
+    public interface IPostProcess
+    {
+        Task ProcessAsync<TRequest, TResponse>(TRequest request, TResponse result);
+    }
+    public class PreProcessPipeline : IPreProcess
+    {
+        public Task ProcessAsync<TRequest>(TRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException($"Command shouldn't be null");
+            return Task.CompletedTask;
+        }
+    }
+    public class FluentValidationPipeline : IPreProcess
+    {
+        private readonly ILifetimeScope _context;
 
-            TResult result;
-
-            using (var scope = context.BeginLifetimeScope())
+        public FluentValidationPipeline(ILifetimeScope context)
+        {
+            _context = context;
+        }
+        public async Task ProcessAsync<TRequest>(TRequest request)
+        {
+            using (var scope = _context.BeginLifetimeScope())
             {
                 var validatorHandlerType = typeof(MicroHandlerValidator<>).MakeGenericType(request.GetType());
                 var validationHandler = scope.ResolveOptional(validatorHandlerType);
                 if (validationHandler != null)
-                    await (Task)validatorHandlerType.GetMethod("Handle").Invoke(validationHandler, new object[] { request });
+                    await(Task)validatorHandlerType.GetMethod("Handle").Invoke(validationHandler, new object[] { request });
+            }
+        }
+    }
 
+    public class PostProcessPipeline : IPostProcess
+    {
+        public Task ProcessAsync<TRequest, TResponse>(TRequest request, TResponse result)
+        {
+
+            return Task.CompletedTask;
+        }
+    }
+    public class EventBus : IEventBusAsync
+    {
+        private readonly ILifetimeScope context;
+        private readonly ICollection<IPreProcess> preProcesses;
+        private readonly ICollection<IPostProcess> postProcesses;
+        private readonly ILogger<EventBus> logger;
+
+        public EventBus(ILifetimeScope context,
+            ICollection<IPreProcess> preprocesses,
+            ICollection<IPostProcess> postProcesses
+            )
+
+        {
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
+            this.preProcesses = preprocesses;
+            this.postProcesses = postProcesses;
+        }
+        public async Task<TResult> ExecuteAsync<TResult>(IRequest<TResult> request)
+        {
+            foreach (var process in preProcesses)
+            {
+                await process.ProcessAsync(request);
+            }
+            TResult result;
+
+            using (var scope = context.BeginLifetimeScope())
+            {
                 var eventHandlerType = typeof(IRequestHandlerAsync<,>).MakeGenericType(request.GetType(), typeof(TResult));
                 var handler = scope.ResolveOptional(eventHandlerType);
                 result = await (Task<TResult>)eventHandlerType.GetMethod("HandleAsync").Invoke(handler, new object[] { request });
+            }
+
+            foreach (var process in postProcesses)
+            {
+                await process.ProcessAsync(request, result);
             }
 
             return result;
