@@ -17,20 +17,20 @@ namespace Digify.Micro
             //Sendd Command with result
             var result = await rs.ExecuteAsync(new UserCommand());
             //Send Command without result
-            var rsss = await rs.ExecuteAsync(new UserRegisterCommand());
+            await rs.ExecuteAsync(new UserRegisterCommand());
 
             //Publish Event
-            //await rs.Publish(new DomainEvent());
+            await rs.Publish(new DomainEvent());
 
             Console.WriteLine("Hello World!");
         }
     }
 
-    public class UserCommand : IRequest<int>
+    public class UserCommand : ICommand<int>
     {
 
     }
-    public class UserRegisterCommand : IRequest<Task>
+    public class UserRegisterCommand : ICommand
     {
 
     }
@@ -42,26 +42,28 @@ namespace Digify.Micro
     }
     public class DomainEventHandler : IRequestHandlerAsync<DomainEvent>
     {
-        public Task HandleAsync(DomainEvent command, CancellationToken token)
+        public Task<Unit> HandleAsync(DomainEvent request, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(DomainEvent));
-            return Task.CompletedTask;
+            return Unit.Task;
         }
     }
 
     public class CommandHandler : IRequestHandlerAsync<UserCommand, int>,
                                   IRequestHandlerAsync<UserRegisterCommand>
     {
-        public Task<int> HandleAsync(UserCommand command, CancellationToken token)
+        public Task<int> HandleAsync(UserCommand request, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(UserCommand));
             return Task.FromResult(5);
         }
 
-        public Task HandleAsync(UserRegisterCommand command, CancellationToken token)
+        public Task<Unit> HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(UserRegisterCommand));
-            return Task.CompletedTask;
+
+            return Unit.Task;
+
         }
     }
 }

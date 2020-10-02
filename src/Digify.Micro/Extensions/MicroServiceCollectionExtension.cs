@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Digify.Micro.Extensions
 {
@@ -54,7 +55,7 @@ namespace Digify.Micro.Extensions
             services.AddTransient<IBusAsync, BusAsync>();
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<>))))
+            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>))))
             .Distinct()
             .ToList();
 
@@ -63,7 +64,6 @@ namespace Digify.Micro.Extensions
             {
                 services.Scan(scan => scan
                         .AddTypes(@type)
-                        .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandlerAsync<>)))
                         .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandlerAsync<,>)))
                         .AsImplementedInterfaces()
                         .WithTransientLifetime());
