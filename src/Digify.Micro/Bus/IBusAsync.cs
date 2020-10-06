@@ -7,6 +7,6 @@ namespace Digify.Micro
     {
         Task<TResult> ExecuteAsync<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
         Task ExecuteAsync<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest;
-        Task Publish<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest;
+        Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest;
     }
 }

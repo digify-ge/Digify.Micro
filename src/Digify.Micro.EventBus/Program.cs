@@ -20,7 +20,7 @@ namespace Digify.Micro
             await rs.ExecuteAsync(new UserRegisterCommand());
 
             //Publish Event
-            await rs.Publish(new DomainEvent());
+            await rs.PublishEvent(new DomainEvent());
 
             Console.WriteLine("Hello World!");
         }
@@ -42,13 +42,30 @@ namespace Digify.Micro
     }
     public class DomainEventHandler : IRequestHandlerAsync<DomainEvent>
     {
-        public Task<Unit> HandleAsync(DomainEvent request, CancellationToken cancellationToken)
+        public Task<Part> HandleAsync(DomainEvent request, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(DomainEvent));
-            return Unit.Task;
+            return Part.Task;
         }
     }
+    public class DomainEventHandler2 : IRequestHandlerAsync<DomainEvent>
+    {
+        public Task<Part> HandleAsync(DomainEvent request, CancellationToken cancellationToken)
+        {
+            Debug.WriteLine(nameof(DomainEvent));
+            return Part.Task;
+        }
+    }
+    public class CommandHandler2 : IRequestHandlerAsync<UserRegisterCommand>
+    {
+        public Task<Part> HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
+        {
+            Debug.WriteLine(nameof(UserRegisterCommand) + "1");
 
+            return Part.Task;
+
+        }
+    }
     public class CommandHandler : IRequestHandlerAsync<UserCommand, int>,
                                   IRequestHandlerAsync<UserRegisterCommand>
     {
@@ -58,11 +75,11 @@ namespace Digify.Micro
             return Task.FromResult(5);
         }
 
-        public Task<Unit> HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
+        public Task<Part> HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(UserRegisterCommand));
+            Debug.WriteLine(nameof(UserRegisterCommand) + "2");
 
-            return Unit.Task;
+            return Part.Task;
 
         }
     }

@@ -9,17 +9,17 @@ namespace Digify.Micro
         Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken);
     }
 
-    public interface IRequestHandlerAsync<in TRequest> : IRequestHandlerAsync<TRequest, Unit>
-        where TRequest : IRequest<Unit>
+    public interface IRequestHandlerAsync<in TRequest> : IRequestHandlerAsync<TRequest, Part>
+        where TRequest : IRequest<Part>
     {
     }
     public abstract class AsyncRequestHandler<TRequest> : IRequestHandlerAsync<TRequest>
         where TRequest : IRequest
     {
-        async Task<Unit> IRequestHandlerAsync<TRequest, Unit>.HandleAsync(TRequest request, CancellationToken cancellationToken)
+        async Task<Part> IRequestHandlerAsync<TRequest, Part>.HandleAsync(TRequest request, CancellationToken cancellationToken)
         {
             await Handle(request, cancellationToken).ConfigureAwait(false);
-            return Unit.Value;
+            return Part.Value;
         }
 
         protected abstract Task Handle(TRequest request, CancellationToken cancellationToken);
@@ -37,10 +37,10 @@ namespace Digify.Micro
     public abstract class RequestHandler<TRequest> : IRequestHandlerAsync<TRequest>
         where TRequest : IRequest
     {
-        Task<Unit> IRequestHandlerAsync<TRequest, Unit>.HandleAsync(TRequest request, CancellationToken cancellationToken)
+        Task<Part> IRequestHandlerAsync<TRequest, Part>.HandleAsync(TRequest request, CancellationToken cancellationToken)
         {
             Handle(request);
-            return Unit.Task;
+            return Part.Task;
         }
 
         protected abstract void Handle(TRequest request);

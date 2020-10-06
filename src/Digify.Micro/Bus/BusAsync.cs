@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -27,7 +28,13 @@ namespace Digify.Micro
             var handler = (RequestHandlerWrapper<TResult>)Activator.CreateInstance(typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResult)));
             return handler.Handle(request, cancellationToken, _serviceFactory);
         }
-        public Task Publish<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
+
+        public Task ExecuteAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
+        {
+            return PublishEvent(request, cancellationToken);
+        }
+
+        public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
         {
             if (request == null)
             {
@@ -45,44 +52,15 @@ namespace Digify.Micro
             }
 
             var responseType = requestInterfaceType!.GetGenericArguments()[0];
-            var handler = (RequestHandlerBase)Activator.CreateInstance(typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, responseType));
+            var handler = (NonReturnableHandlerWrapper)Activator.CreateInstance(typeof(NonReturnableHandlerWrapperImpl<>).MakeGenericType(requestType));
 
-           
-            return handler.Handle(request, cancellationToken, _serviceFactory);
-        }
-        public Task ExecuteAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
-        {
-            var requestType = request.GetType();
-            var requestInterfaceType = requestType
-                .GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequest<>));
-            var isValidRequest = requestInterfaceType != null;
-
-            if (!isValidRequest)
+            return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
             {
-                throw new ArgumentException($"{nameof(request)} does not implement ${nameof(IRequest)}");
-            }
-
-            var responseType = requestInterfaceType!.GetGenericArguments()[0];
-            var handler = (RequestHandlerBase)Activator.CreateInstance(typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, responseType));
-
-            return handler.Handle(request, cancellationToken, _serviceFactory);
-        }
-        private static TypeBuilder GetTypeBuilder(Type type)
-        {
-            var typeSignature = type.Name;
-            var an = new AssemblyName(typeSignature);
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(Guid.NewGuid().ToString()), AssemblyBuilderAccess.Run);
-            ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-            TypeBuilder tb = moduleBuilder.DefineType(typeSignature,
-                    TypeAttributes.Public |
-                    TypeAttributes.Class |
-                    TypeAttributes.AutoClass |
-                    TypeAttributes.AnsiClass |
-                    TypeAttributes.BeforeFieldInit |
-                    TypeAttributes.AutoLayout,
-                    null);
-            return tb;
+                foreach (var handler in handlers)
+                {
+                    await handler(request, cancellationToken).ConfigureAwait(false);
+                }
+            });
         }
     }
 }
