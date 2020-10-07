@@ -68,6 +68,23 @@ namespace Digify.Micro
             return Task.CompletedTask;
         }
 
+        public async Task PublishAggregateEvents<T>(AggregateRoot<T> aggregate, CancellationToken cancellationToken = default) where T : IComparable
+        {
+            try
+            {
+                var events = aggregate.GetUncommittedEvents();
+                await PublishEvents(events);
+            }
+            catch
+            {
+                //TODO: Logging exception
+            }
+            finally
+            {
+                aggregate.ClearUncommittedEvents();
+            }
+        }
+
         public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IDomainEvent
         {
             if (request == null)

@@ -29,7 +29,7 @@ namespace Digify.Micro
 
             //Publish Event
             await rs.PublishEvents(new List<IDomainEvent>(){
-                new DomainEvent()
+                (IDomainEvent)new DomainEvent()
             });
 
             Console.WriteLine("Hello World!");
