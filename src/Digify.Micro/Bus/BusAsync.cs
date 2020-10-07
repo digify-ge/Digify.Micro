@@ -51,6 +51,23 @@ namespace Digify.Micro
             return handler.Handle(request, cancellationToken, _serviceFactory);
         }
 
+        public Task ExecutesAsync<TRequest>(IEnumerable<TRequest> requests, CancellationToken cancellationToken = default) where TRequest : IRequest
+        {
+            Parallel.ForEach(requests, request =>
+            {
+                ExecuteAsync(request, cancellationToken)
+                .ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        throw t.Exception;
+                    }
+                    return t;
+                }, cancellationToken);
+            });
+            return Task.CompletedTask;
+        }
+
         public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IDomainEvent
         {
             if (request == null)
@@ -71,6 +88,23 @@ namespace Digify.Micro
             var handler = (DomainEventHandlerWrapper)Activator.CreateInstance(typeof(DomainEventHandlerWrapperImpl<>).MakeGenericType(requestType));
 
             return handler.Handle(request, cancellationToken, _serviceFactory);
+        }
+
+        public Task PublishEvents<TRequest>(IEnumerable<TRequest> events, CancellationToken cancellationToken = default) where TRequest : IDomainEvent
+        {
+            Parallel.ForEach(events, @event =>
+            {
+                PublishEvent(@event, cancellationToken)
+                .ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        throw t.Exception;
+                    }
+                    return t;
+                }, cancellationToken);
+            });
+            return Task.CompletedTask;
         }
     }
 }
