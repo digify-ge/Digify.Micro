@@ -20,7 +20,7 @@ namespace Digify.Micro.Internal
                                     Func<IEnumerable<Func<IRequest, CancellationToken, Task>>, IRequest, CancellationToken, Task> publish)
         {
             var handlers = serviceFactory
-                .GetInstances<IRequestHandlerAsync<TRequest, Part>>()
+                .GetInstances<IRequestHandlerAsync<TRequest>>()
                 .Select(x => new Func<IRequest, CancellationToken, Task>((theRequest, theToken) => x.HandleAsync((TRequest)theRequest, theToken)));
 
             return publish(handlers, request, cancellationToken);

@@ -15,23 +15,6 @@ namespace Digify.Micro.Extensions
         private static IEnumerable<Assembly> _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(e => !e.IsDynamic);
 
         /// <summary>
-        /// Adding only Commands, Queries, Domains 
-        /// </summary>
-        /// <param name="services"></param>
-        /// <returns></returns>
-        public static IServiceCollection AddMicroCore(this IServiceCollection services, MicroSettings settings = default)
-        {
-            MicroSettings microSettings = settings;
-            if (settings == null)
-                microSettings = new MicroSettings();
-
-            services.AddSingleton(microSettings);
-            services.AddRequiredServices();
-            services.AddRequestHandlers();
-            return services;
-        }
-
-        /// <summary>
         /// Adding Commands, Queries, Domains and Fluent Validation for CQRS.
         /// </summary>
         /// <param name="services"></param>
@@ -45,7 +28,6 @@ namespace Digify.Micro.Extensions
                 microSettings = new MicroSettings();
 
             services.AddSingleton(microSettings);
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(FluentValidationBehavior<,>));
             services.AddRequiredServices();
             services.AddRequestHandlers();
             return services;
@@ -53,10 +35,8 @@ namespace Digify.Micro.Extensions
         private static IServiceCollection AddRequestHandlers(this IServiceCollection services)
         {
             services.AddTransient<IBusAsync, BusAsync>();
-            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
-            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(IDomainEventHandlerAsync<>))))
-            .GroupBy(e => e.GetTypeInfo().ImplementedInterfaces.Select(e => e.GetGenericTypeDefinition()).First())
+            var exportedTypes = GetExportedTypes(typeof(IRequestHandlerAsync<,>), typeof(IRequestHandlerAsync<>), typeof(IDomainEventHandlerAsync<>))
+                .GroupBy(e => e.GetTypeInfo().ImplementedInterfaces.Select(e => e.GetGenericTypeDefinition()).First())
             .Distinct()
             .ToList();
 
@@ -79,9 +59,26 @@ namespace Digify.Micro.Extensions
         private static IServiceCollection AddRequiredServices(this IServiceCollection services)
         {
             services.AddTransient<ServiceFactory>(p => p.GetService);
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
+
+            var exportedTypes = GetExportedTypes(typeof(IPipelineBehavior<,>));
+            foreach (var @type in exportedTypes)
+            {
+                services.Scan(scan => scan
+                                         .AddTypes(@type)
+                                         .AddClasses(classes => classes.AssignableTo(@type))
+                                         .AsImplementedInterfaces()
+                                         .WithTransientLifetime());
+            }
             return services;
+        }
+        private static IEnumerable<Type> GetExportedTypes(params Type[] type)
+        {
+            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
+          .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
+          && type.Contains(x.GetGenericTypeDefinition())))
+          .Distinct()
+          .ToList();
+            return exportedTypes;
         }
     }
 }

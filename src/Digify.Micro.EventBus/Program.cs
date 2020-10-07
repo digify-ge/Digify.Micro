@@ -44,26 +44,24 @@ namespace Digify.Micro
     {
         public Task HandleAsync(DomainEvent domainEvent, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(DomainEvent));
-            return Part.Task;
+            Debug.WriteLine(nameof(DomainEventHandler));
+            return Task.CompletedTask;
         }
     }
     public class DomainEventHandler2 : IDomainEventHandlerAsync<DomainEvent>
     {
         public Task HandleAsync(DomainEvent request, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(DomainEvent));
-            return Part.Task;
+            Debug.WriteLine(nameof(DomainEventHandler2));
+            return Task.CompletedTask;
         }
     }
     public class CommandHandler2 : IRequestHandlerAsync<UserRegisterCommand>
     {
-        public Task<Part> HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
+        public Task HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(UserRegisterCommand) + "1");
-
-            return Part.Task;
-
+            Debug.WriteLine(nameof(CommandHandler2));
+            return Task.CompletedTask;
         }
     }
     public class CommandHandler : IRequestHandlerAsync<UserCommand, int>,
@@ -71,16 +69,14 @@ namespace Digify.Micro
     {
         public Task<int> HandleAsync(UserCommand request, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(UserCommand));
+            Debug.WriteLine(nameof(CommandHandler) + " " + nameof(UserCommand));
             return Task.FromResult(5);
         }
 
-        public Task<Part> HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
+        public Task HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(UserRegisterCommand) + "2");
-
-            return Part.Task;
-
+            Debug.WriteLine(nameof(CommandHandler) + " " + nameof(UserRegisterCommand));
+            return Task.CompletedTask;
         }
     }
 }
