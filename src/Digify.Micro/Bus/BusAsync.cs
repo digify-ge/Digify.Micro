@@ -15,9 +15,9 @@ namespace Digify.Micro
 {
     public class BusAsync : IBusAsync
     {
-        private readonly ServiceFactory _serviceFactory;
+        private readonly ServiceScope _serviceFactory;
 
-        public BusAsync(ServiceFactory serviceFactory)
+        public BusAsync(ServiceScope serviceFactory)
 
         {
             this._serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
@@ -48,13 +48,7 @@ namespace Digify.Micro
 
             var handler = (NonReturnableHandlerWrapper)Activator.CreateInstance(typeof(NonReturnableHandlerWrapperImpl<>).MakeGenericType(requestType));
 
-            return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
-            {
-                foreach (var handler in handlers)
-                {
-                    await handler(request, cancellationToken).ConfigureAwait(false);
-                }
-            });
+            return handler.Handle(request, cancellationToken, _serviceFactory);
         }
 
         public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IDomainEvent
@@ -76,13 +70,7 @@ namespace Digify.Micro
 
             var handler = (DomainEventHandlerWrapper)Activator.CreateInstance(typeof(DomainEventHandlerWrapperImpl<>).MakeGenericType(requestType));
 
-            return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
-            {
-                foreach (var handler in handlers)
-                {
-                    await handler(request, cancellationToken).ConfigureAwait(false);
-                }
-            });
+            return handler.Handle(request, cancellationToken, _serviceFactory);
         }
     }
 }
