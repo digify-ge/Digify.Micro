@@ -1,5 +1,4 @@
-﻿using Digify.Micro.Domain;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Digify.Micro
 {

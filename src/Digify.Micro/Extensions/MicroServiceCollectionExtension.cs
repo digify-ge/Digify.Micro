@@ -1,15 +1,12 @@
-﻿using Autofac;
-using Digify.Micro.Behaviors;
-using Digify.Micro.Commands;
-using Digify.Micro.Domain;
-using Digify.Micro.Queries;
+﻿using Digify.Micro.Internal;
+using Digify.Micro.Processors;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Digify.Micro.Extensions
 {
@@ -22,16 +19,16 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicroCore(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
+        public static IServiceCollection AddMicroCore(this IServiceCollection services, MicroSettings settings = default)
         {
             MicroSettings microSettings = settings;
             if (settings == null)
                 microSettings = new MicroSettings();
 
             services.AddSingleton(microSettings);
-
-            builder.AddCommands(services).AddQueries(services).AddDomains(services);
-            return builder;
+            services.AddRequiredServices();
+            services.AddRequestHandlers();
+            return services;
         }
 
         /// <summary>
@@ -39,7 +36,7 @@ namespace Digify.Micro.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static ContainerBuilder AddMicro(this IServiceCollection services, ContainerBuilder builder, MicroSettings settings = default)
+        public static IServiceCollection AddMicro(this IServiceCollection services, MicroSettings settings = default)
         {
             services.AddValidatorsFromAssemblies(_assemblies);
 
@@ -48,57 +45,38 @@ namespace Digify.Micro.Extensions
                 microSettings = new MicroSettings();
 
             services.AddSingleton(microSettings);
-
-            builder.AddCommands(services).AddQueries(services).AddDomains(services);
-            builder.RegisterGeneric(typeof(MicroHandlerValidator<>));
-            return builder;
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(FluentValidationBehavior<,>));
+            services.AddRequiredServices();
+            services.AddRequestHandlers();
+            return services;
         }
-
-        private static ContainerBuilder AddCommands(this ContainerBuilder container, IServiceCollection services)
+        private static IServiceCollection AddRequestHandlers(this IServiceCollection services)
         {
-            services.AddTransient<ICommandBusAsync, CommandBusAsync>();
+            services.AddTransient<IBusAsync, BusAsync>();
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && (x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<>))))
+            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>))))
+            .Distinct()
             .ToList();
 
-            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
+
+            foreach (var @type in exportedTypes)
             {
-                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(ICommandHandlerAsync<>));
-                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(ICommandHandlerAsync<,>));
+                services.Scan(scan => scan
+                        .AddTypes(@type)
+                        .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandlerAsync<,>)))
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime());
             }
-            return container;
+            return services;
         }
 
-        private static ContainerBuilder AddQueries(this ContainerBuilder container, IServiceCollection services)
+        private static IServiceCollection AddRequiredServices(this IServiceCollection services)
         {
-            services.AddTransient<IQueryBusAsync, QueryBusAsync>();
-            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
-            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && x.GetGenericTypeDefinition() == typeof(IQueryHandlerAsync<,>)))
-            .ToList();
-
-            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
-            {
-                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(IQueryHandlerAsync<,>));
-            }
-            return container;
-        }
-
-        private static ContainerBuilder AddDomains(this ContainerBuilder container, IServiceCollection services)
-        {
-            services.AddSingleton<IDomainEventBusAsync, DomainEventBusAsync>();
-
-            var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
-            .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && x.GetGenericTypeDefinition() == typeof(IDomainEventHandlerAsync<>)))
-            .ToList();
-
-            foreach (var assembly in exportedTypes.Select(e => e.Assembly).Distinct())
-            {
-                container.RegisterAssemblyTypes(assembly).AsClosedTypesOf(typeof(IDomainEventHandlerAsync<>));
-            }
-            return container;
+            services.AddTransient<ServiceFactory>(p => p.GetService);
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
+            return services;
         }
     }
 }
