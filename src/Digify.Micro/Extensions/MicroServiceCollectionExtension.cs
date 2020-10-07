@@ -55,18 +55,23 @@ namespace Digify.Micro.Extensions
             services.AddTransient<IBusAsync, BusAsync>();
             var exportedTypes = _assemblies.SelectMany(e => e.ExportedTypes)
             .Where(e => e.GetTypeInfo().ImplementedInterfaces.Any(x => x.IsGenericType
-            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>))))
+            && (x.GetGenericTypeDefinition() == typeof(IRequestHandlerAsync<,>) || x.GetGenericTypeDefinition() == typeof(IDomainEventHandlerAsync<>))))
+            .GroupBy(e => e.GetTypeInfo().ImplementedInterfaces.Select(e => e.GetGenericTypeDefinition()).First())
             .Distinct()
             .ToList();
 
 
-            foreach (var @type in exportedTypes)
+            foreach (var group in exportedTypes)
             {
-                services.Scan(scan => scan
-                        .AddTypes(@type)
-                        .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandlerAsync<,>)))
-                        .AsImplementedInterfaces()
-                        .WithTransientLifetime());
+                foreach (var @type in group)
+                {
+                    services.Scan(scan => scan
+                                           .AddTypes(@type)
+                                           .AddClasses(classes => classes.AssignableTo(group.Key))
+                                           .AsImplementedInterfaces()
+                                           .WithTransientLifetime());
+                }
+
             }
             return services;
         }

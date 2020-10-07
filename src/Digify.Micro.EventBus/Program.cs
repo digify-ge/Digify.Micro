@@ -40,17 +40,17 @@ namespace Digify.Micro
 
         public long Version { get; set; }
     }
-    public class DomainEventHandler : IRequestHandlerAsync<DomainEvent>
+    public class DomainEventHandler : IDomainEventHandlerAsync<DomainEvent>
     {
-        public Task<Part> HandleAsync(DomainEvent request, CancellationToken cancellationToken)
+        public Task HandleAsync(DomainEvent domainEvent, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(DomainEvent));
             return Part.Task;
         }
     }
-    public class DomainEventHandler2 : IRequestHandlerAsync<DomainEvent>
+    public class DomainEventHandler2 : IDomainEventHandlerAsync<DomainEvent>
     {
-        public Task<Part> HandleAsync(DomainEvent request, CancellationToken cancellationToken)
+        public Task HandleAsync(DomainEvent request, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(DomainEvent));
             return Part.Task;

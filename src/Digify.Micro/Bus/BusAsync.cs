@@ -31,11 +31,6 @@ namespace Digify.Micro
 
         public Task ExecuteAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
         {
-            return PublishEvent(request, cancellationToken);
-        }
-
-        public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
-        {
             if (request == null)
             {
                 throw new ArgumentNullException(nameof(request));
@@ -53,6 +48,34 @@ namespace Digify.Micro
 
             var responseType = requestInterfaceType!.GetGenericArguments()[0];
             var handler = (NonReturnableHandlerWrapper)Activator.CreateInstance(typeof(NonReturnableHandlerWrapperImpl<>).MakeGenericType(requestType));
+
+            return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
+            {
+                foreach (var handler in handlers)
+                {
+                    await handler(request, cancellationToken).ConfigureAwait(false);
+                }
+            });
+        }
+
+        public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IDomainEvent
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+            var requestType = request.GetType();
+            var requestInterfaceType = requestType
+                .GetInterfaces()
+                .FirstOrDefault(i => i == typeof(IDomainEvent));
+            var isValidRequest = requestInterfaceType != null;
+
+            if (!isValidRequest)
+            {
+                throw new ArgumentException($"{nameof(request)} does not implement ${nameof(IRequest)}");
+            }
+
+            var handler = (DomainEventHandlerWrapper)Activator.CreateInstance(typeof(DomainEventHandlerWrapperImpl<>).MakeGenericType(requestType));
 
             return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
             {
