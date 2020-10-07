@@ -1,6 +1,7 @@
 ﻿using Digify.Micro.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,10 +18,19 @@ namespace Digify.Micro
             //Sendd Command with result
             var result = await rs.ExecuteAsync(new UserCommand());
             //Send Command without result
-            await rs.ExecuteAsync(new UserRegisterCommand());
+            //await rs.ExecuteAsync(new UserRegisterCommand());
+
+            await rs.ExecutesAsync(new List<ICommand>()
+            {
+                new SendOtp(),
+                new UserRegisterCommand(),
+            });
+
 
             //Publish Event
-            await rs.PublishEvent(new DomainEvent());
+            await rs.PublishEvents(new List<IDomainEvent>(){
+                new DomainEvent()
+            });
 
             Console.WriteLine("Hello World!");
         }
@@ -31,6 +41,10 @@ namespace Digify.Micro
 
     }
     public class UserRegisterCommand : ICommand
+    {
+
+    }
+    public class SendOtp : ICommand
     {
 
     }
@@ -56,27 +70,27 @@ namespace Digify.Micro
             return Task.CompletedTask;
         }
     }
-    public class CommandHandler2 : IRequestHandlerAsync<UserRegisterCommand>
+    public class CommandHandler2 : IRequestHandlerAsync<UserRegisterCommand>, IRequestHandlerAsync<SendOtp>
     {
         public Task HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
         {
-            Debug.WriteLine(nameof(CommandHandler2));
+            Debug.WriteLine(nameof(CommandHandler2) + " " + nameof(UserRegisterCommand));
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(SendOtp request, CancellationToken cancellationToken)
+        {
+            Thread.Sleep(4000);
+            Debug.WriteLine(nameof(SendOtp));
             return Task.CompletedTask;
         }
     }
-    public class CommandHandler : IRequestHandlerAsync<UserCommand, int>,
-                                  IRequestHandlerAsync<UserRegisterCommand>
+    public class CommandHandler : IRequestHandlerAsync<UserCommand, int>
     {
         public Task<int> HandleAsync(UserCommand request, CancellationToken cancellationToken)
         {
             Debug.WriteLine(nameof(CommandHandler) + " " + nameof(UserCommand));
             return Task.FromResult(5);
-        }
-
-        public Task HandleAsync(UserRegisterCommand request, CancellationToken cancellationToken)
-        {
-            Debug.WriteLine(nameof(CommandHandler) + " " + nameof(UserRegisterCommand));
-            return Task.CompletedTask;
         }
     }
 }

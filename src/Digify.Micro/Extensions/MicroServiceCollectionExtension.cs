@@ -58,7 +58,7 @@ namespace Digify.Micro.Extensions
 
         private static IServiceCollection AddRequiredServices(this IServiceCollection services)
         {
-            services.AddTransient<ServiceFactory>(p => p.GetService);
+            services.AddTransient<ServiceScope>(p => p.GetService);
 
             var exportedTypes = GetExportedTypes(typeof(IPipelineBehavior<,>));
             foreach (var @type in exportedTypes)

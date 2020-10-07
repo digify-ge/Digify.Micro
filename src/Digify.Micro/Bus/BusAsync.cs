@@ -15,9 +15,9 @@ namespace Digify.Micro
 {
     public class BusAsync : IBusAsync
     {
-        private readonly ServiceFactory _serviceFactory;
+        private readonly ServiceScope _serviceFactory;
 
-        public BusAsync(ServiceFactory serviceFactory)
+        public BusAsync(ServiceScope serviceFactory)
 
         {
             this._serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
@@ -48,13 +48,24 @@ namespace Digify.Micro
 
             var handler = (NonReturnableHandlerWrapper)Activator.CreateInstance(typeof(NonReturnableHandlerWrapperImpl<>).MakeGenericType(requestType));
 
-            return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
+            return handler.Handle(request, cancellationToken, _serviceFactory);
+        }
+
+        public Task ExecutesAsync<TRequest>(IEnumerable<TRequest> requests, CancellationToken cancellationToken = default) where TRequest : IRequest
+        {
+            Parallel.ForEach(requests, request =>
             {
-                foreach (var handler in handlers)
+                ExecuteAsync(request, cancellationToken)
+                .ContinueWith(t =>
                 {
-                    await handler(request, cancellationToken).ConfigureAwait(false);
-                }
+                    if (t.IsFaulted)
+                    {
+                        throw t.Exception;
+                    }
+                    return t;
+                }, cancellationToken);
             });
+            return Task.CompletedTask;
         }
 
         public Task PublishEvent<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IDomainEvent
@@ -76,13 +87,24 @@ namespace Digify.Micro
 
             var handler = (DomainEventHandlerWrapper)Activator.CreateInstance(typeof(DomainEventHandlerWrapperImpl<>).MakeGenericType(requestType));
 
-            return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>
+            return handler.Handle(request, cancellationToken, _serviceFactory);
+        }
+
+        public Task PublishEvents<TRequest>(IEnumerable<TRequest> events, CancellationToken cancellationToken = default) where TRequest : IDomainEvent
+        {
+            Parallel.ForEach(events, @event =>
             {
-                foreach (var handler in handlers)
+                PublishEvent(@event, cancellationToken)
+                .ContinueWith(t =>
                 {
-                    await handler(request, cancellationToken).ConfigureAwait(false);
-                }
+                    if (t.IsFaulted)
+                    {
+                        throw t.Exception;
+                    }
+                    return t;
+                }, cancellationToken);
             });
+            return Task.CompletedTask;
         }
     }
 }
