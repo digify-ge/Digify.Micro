@@ -38,7 +38,7 @@ namespace Digify.Micro
             var requestType = request.GetType();
             var requestInterfaceType = requestType
                 .GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequest<>));
+                .FirstOrDefault(i => i == typeof(IRequest));
             var isValidRequest = requestInterfaceType != null;
 
             if (!isValidRequest)
@@ -46,7 +46,6 @@ namespace Digify.Micro
                 throw new ArgumentException($"{nameof(request)} does not implement ${nameof(IRequest)}");
             }
 
-            var responseType = requestInterfaceType!.GetGenericArguments()[0];
             var handler = (NonReturnableHandlerWrapper)Activator.CreateInstance(typeof(NonReturnableHandlerWrapperImpl<>).MakeGenericType(requestType));
 
             return handler.Handle(request, cancellationToken, _serviceFactory, async (handlers, request, token) =>

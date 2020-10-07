@@ -18,7 +18,7 @@ namespace Digify.Micro
         Task IDomainEventHandlerAsync<TDomainEvent>.HandleAsync(TDomainEvent domainEvent, CancellationToken cancellationToken)
         {
             HandleAsync(domainEvent);
-            return Part.Task;
+            return Task.CompletedTask;
         }
         protected abstract void HandleAsync(TDomainEvent notification);
     }

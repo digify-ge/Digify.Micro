@@ -35,7 +35,7 @@ namespace Digify.Micro.Extensions
         private static IServiceCollection AddRequestHandlers(this IServiceCollection services)
         {
             services.AddTransient<IBusAsync, BusAsync>();
-            var exportedTypes = GetExportedTypes(typeof(IRequestHandlerAsync<,>), typeof(IDomainEventHandlerAsync<>))
+            var exportedTypes = GetExportedTypes(typeof(IRequestHandlerAsync<,>), typeof(IRequestHandlerAsync<>), typeof(IDomainEventHandlerAsync<>))
                 .GroupBy(e => e.GetTypeInfo().ImplementedInterfaces.Select(e => e.GetGenericTypeDefinition()).First())
             .Distinct()
             .ToList();

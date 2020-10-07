@@ -16,11 +16,10 @@ namespace Digify.Micro.Tests.Application.CommandHandlers
             _domainEventBus = domainEventBus;
         }
 
-        public async Task<Part> HandleAsync(TestCommand request, CancellationToken cancellationToken)
+        public async Task HandleAsync(TestCommand request, CancellationToken cancellationToken)
         {
             IDomainEvent evt = new SomethingGoodHappenedDomainEvent("Givi");
             await _domainEventBus.PublishEvent(evt);
-            return await Part.Task;
         }
     }
 }

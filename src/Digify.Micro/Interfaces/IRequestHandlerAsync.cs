@@ -8,7 +8,8 @@ namespace Digify.Micro
         Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken);
     }
 
-    public interface IRequestHandlerAsync<in TRequest> : IRequestHandlerAsync<TRequest, Part> where TRequest : IRequest<Part>
+    public interface IRequestHandlerAsync<in TRequest> where TRequest : IRequest
     {
+        Task HandleAsync(TRequest request, CancellationToken cancellationToken);
     }
 }

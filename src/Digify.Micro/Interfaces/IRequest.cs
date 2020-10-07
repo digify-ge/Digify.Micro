@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Digify.Micro
 {
-    public interface IRequest : IRequest<Part> { }
+    public interface IRequest { }
 
     public interface IRequest<out TResponse> : IRequestBase { }
     public interface IRequestBase { }
