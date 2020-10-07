@@ -9,6 +9,7 @@ namespace Digify.Micro
 
     public interface IRequest<out TResponse> : IRequestBase { }
     public interface IRequestBase { }
+    public interface IQuery<T> : IRequest<T> { }
     public interface ICommand<T> : IRequest<T> { }
     public interface ICommand : IRequest { }
     public interface IDomainEvent : IRequest
