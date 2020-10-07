@@ -12,7 +12,7 @@ namespace Digify.Micro
     public interface IQuery<T> : IRequest<T> { }
     public interface ICommand<T> : IRequest<T> { }
     public interface ICommand : IRequest { }
-    public interface IDomainEvent : IRequest
+    public interface IDomainEvent
     {
         Guid AggregateRootId { get; }
         long Version { get; set; }
