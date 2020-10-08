@@ -31,7 +31,7 @@ namespace Digify.Micro.Internal
             var handlers = serviceFactory
                 .GetInstances<IRequestHandlerAsync<TRequest>>()
                 .Select(x => new Func<IRequest, CancellationToken, Task>((theRequest, theToken) => x.HandleAsync((TRequest)theRequest, theToken)));
-            foreach(var handler in handlers)
+            foreach (var handler in handlers)
             {
                 handler(request, cancellationToken);
             }
@@ -64,10 +64,8 @@ namespace Digify.Micro.Internal
                .GetInstances<IDomainEventHandlerAsync<TDomainEvent>>()
                .Select(x => new Func<IDomainEvent, CancellationToken, Task>((theRequest, theToken) => x.HandleAsync((TDomainEvent)theRequest, theToken)));
 
-            foreach (var handler in handlers)
-            {
-                handler(request, cancellationToken);
-            }
+            var tasks = handlers.Select(h => h(request, cancellationToken)).ToArray();
+            Task.WaitAll(tasks);
             return Task.CompletedTask;
         }
     }

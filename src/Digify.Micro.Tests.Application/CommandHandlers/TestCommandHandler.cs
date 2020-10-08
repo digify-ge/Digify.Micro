@@ -19,7 +19,7 @@ namespace Digify.Micro.Tests.Application.CommandHandlers
         public async Task HandleAsync(TestCommand request, CancellationToken cancellationToken)
         {
             IDomainEvent evt = new SomethingGoodHappenedDomainEvent("Givi");
-            await _domainEventBus.PublishEvent(evt);
+            await _domainEventBus.PublishAsync(evt);
         }
     }
 }
