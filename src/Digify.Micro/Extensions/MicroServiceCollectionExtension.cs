@@ -60,7 +60,9 @@ namespace Digify.Micro.Extensions
         {
             services.AddTransient<ServiceScope>(p => p.GetService);
 
-            var exportedTypes = GetExportedTypes(typeof(IPipelineBehavior<,>));
+            var exportedTypes = GetExportedTypes(typeof(IPipelineBehavior<,>), 
+                typeof(IRequestPreProcessor<>),
+                typeof(IRequestPostProcessor<,>));
             foreach (var @type in exportedTypes)
             {
                 services.Scan(scan => scan

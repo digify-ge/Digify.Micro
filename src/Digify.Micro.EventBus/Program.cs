@@ -26,16 +26,36 @@ namespace Digify.Micro
                 new UserRegisterCommand(),
             });
 
-
+            await rs.PublishAsync(new DomainEvent());
             //Publish Event
-            await rs.PublishEvents(new List<IDomainEvent>(){
-                new DomainEvent()
-            });
+            //await rs.PublishEvents(new List<IDomainEvent>(){
+            //    new DomainEvent(),
+            //});
+
+
 
             Console.WriteLine("Hello World!");
         }
     }
+    public class PreRequest<T> : IRequestPreProcessor<T>
+    {
+        public int Order => 0;
 
+        public Task Process(T request, CancellationToken cancellationToken)
+        {
+
+            return Task.CompletedTask;
+        }
+    }
+    public class PostRequest<T,R> : IRequestPostProcessor<T,R>
+    {
+        public int Order => 0;
+
+        public Task Process(T request, R response, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+    }
     public class UserCommand : ICommand<int>
     {
 
@@ -56,10 +76,18 @@ namespace Digify.Micro
     }
     public class DomainEventHandler : IDomainEventHandlerAsync<DomainEvent>
     {
-        public Task HandleAsync(DomainEvent domainEvent, CancellationToken cancellationToken)
+        public async Task HandleAsync(DomainEvent domainEvent, CancellationToken cancellationToken)
         {
+            try
+            {
+                await Task.Delay(5000);
+            }
+            catch (Exception ex)
+            {
+
+            }
+            Task.Delay(10000).GetAwaiter().GetResult();
             Debug.WriteLine(nameof(DomainEventHandler));
-            return Task.CompletedTask;
         }
     }
     public class DomainEventHandler2 : IDomainEventHandlerAsync<DomainEvent>
