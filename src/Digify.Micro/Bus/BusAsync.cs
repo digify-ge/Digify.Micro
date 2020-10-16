@@ -18,19 +18,18 @@ namespace Digify.Micro
         private readonly ServiceScope _serviceFactory;
         private readonly ILogger<BusAsync> _logger;
         public BusAsync(ServiceScope serviceFactory)
-
         {
             _logger = serviceFactory.GetInstance<ILogger<BusAsync>>();
             this._serviceFactory = serviceFactory ?? throw new ArgumentNullException(nameof(serviceFactory));
         }
-        public Task<TResult> ExecuteAsync<TResult>(IRequest<TResult> request, CancellationToken cancellationToken)
+        public async Task<TResult> ExecuteAsync<TResult>(IRequest<TResult> request, CancellationToken cancellationToken)
         {
             var requestType = request.GetType();
             var handler = (RequestHandlerWrapper<TResult>)Activator.CreateInstance(typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResult)));
-            return handler.Handle(request, cancellationToken, _serviceFactory);
+            return await handler.Handle(request, cancellationToken, _serviceFactory);
         }
 
-        public Task ExecuteAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
+        public async Task ExecuteAsync<TRequest>(TRequest request, CancellationToken cancellationToken) where TRequest : IRequest
         {
             if (request == null)
             {
@@ -49,8 +48,7 @@ namespace Digify.Micro
 
             var handler = (NonReturnableHandlerWrapper)Activator.CreateInstance(typeof(NonReturnableHandlerWrapperImpl<>).MakeGenericType(requestType));
 
-            handler.Handle(request, cancellationToken, _serviceFactory);
-            return Task.CompletedTask;
+            await handler.Handle(request, cancellationToken, _serviceFactory);
         }
 
         public Task ExecutesAsync<TRequest>(IEnumerable<TRequest> requests, CancellationToken cancellationToken = default) where TRequest : IRequest

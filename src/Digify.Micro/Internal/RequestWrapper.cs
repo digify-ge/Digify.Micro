@@ -37,12 +37,12 @@ namespace Digify.Micro.Internal
                 }, cancellationToken);
         }
        
-        public override Task<TResponse> Handle(IRequest<TResponse> request, CancellationToken cancellationToken,
+        public override async Task<TResponse> Handle(IRequest<TResponse> request, CancellationToken cancellationToken,
             ServiceScope serviceFactory)
         {
             Task<TResponse> Handler() => serviceFactory.GetHandler<IRequestHandlerAsync<TRequest, TResponse>>().HandleAsync((TRequest)request, cancellationToken);
 
-            return serviceFactory
+            return await serviceFactory
                 .GetInstances<IPipelineBehavior<TRequest, TResponse>>()
                 .Reverse()
                 .Aggregate((RequestHandlerDelegate<TResponse>)Handler, (next, pipeline) => () => pipeline.Handle((TRequest)request, cancellationToken, next))();

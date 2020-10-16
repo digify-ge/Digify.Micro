@@ -26,16 +26,15 @@ namespace Digify.Micro.Internal
 
             return publish(handlers, request, cancellationToken);
         }
-        public override Task Handle(IRequest request, CancellationToken cancellationToken, ServiceScope serviceFactory)
+        public override async Task Handle(IRequest request, CancellationToken cancellationToken, ServiceScope serviceFactory)
         {
             var handlers = serviceFactory
                 .GetInstances<IRequestHandlerAsync<TRequest>>()
                 .Select(x => new Func<IRequest, CancellationToken, Task>((theRequest, theToken) => x.HandleAsync((TRequest)theRequest, theToken)));
             foreach (var handler in handlers)
             {
-                handler(request, cancellationToken);
+                await handler(request, cancellationToken);
             }
-            return Task.CompletedTask;
         }
     }
 
