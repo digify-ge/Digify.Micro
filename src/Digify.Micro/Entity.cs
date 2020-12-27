@@ -43,22 +43,22 @@ namespace Digify.Micro
         /// </summary>
         public Entity()
         {
-            Created = DateTime.Now;
-            Updated = DateTime.Now;
+            Created = DateTime.UtcNow;
+            Updated = DateTime.UtcNow;
         }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <remarks>
-        /// This will set <see cref="Created"/> and <see cref="Updated"/> properties to <see cref="DateTime.Now"/>.
+        /// This will set <see cref="Created"/> and <see cref="Updated"/> properties to <see cref="DateTime.UtcNow"/>.
         /// </remarks>
         /// <param name="entityId">ID of entity.</param>
         public Entity(TEntityId entityId)
         {
             Id = entityId;
-            Created = DateTime.Now;
-            Updated = DateTime.Now;
+            Created = DateTime.UtcNow;
+            Updated = DateTime.UtcNow;
         }
 
         #endregion Constructors
