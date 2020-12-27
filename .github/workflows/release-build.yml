@@ -23,8 +23,8 @@ jobs:
     #Exporting version to env variable
     - name: Set env
       run: |
-        echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:10}
-        echo ::set-env name=NUGET_AUTH_TOKEN::${{secrets.NUGET_SECRET_DIGIFY}}
+        echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
+        echo "NUGET_AUTH_TOKEN=${{secrets.NUGET_SECRET_DIGIFY}}" >> $GITHUB_ENV
     - name: Install dependencies
       run: dotnet restore ./src/Digify.Micro.sln
     - name: Build
